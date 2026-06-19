@@ -39,7 +39,7 @@ func (s *FizzBuzzSender) Record(ctx context.Context, params fizzbuzz.Params) err
 		Params:       params,
 	}
 
-	return s.pub.Publish(ctx, FizzBuzzRequestsTopic, "", msg, map[string]string{
+	return s.pub.Publish(ctx, FizzBuzzRequestsTopic, msg.IdempotentID, msg, map[string]string{
 		"request_id":     msg.RequestID,
 		"idempotent_id":  msg.IdempotentID,
 		"content-type":   "application/json",
