@@ -1,0 +1,9 @@
+package: apiv1
+output: internal/api/v1/api.gen.go
+generate:
+  strict-server: true
+  gin-server: true
+  models: true
+  embedded-spec: true
+output-options:
+  skip-prune: false

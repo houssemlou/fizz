@@ -1,0 +1,23 @@
+with-expecter: true
+resolve-type-alias: false
+disable-version-string: true
+issue-845-fix: true
+
+# Global defaults — applied to every package below.
+dir: internal/mocks
+outpkg: mocks
+filename: "mock_{{.InterfaceName | snakecase}}.go"
+mockname: "Mock{{.InterfaceName}}"
+
+# List only the packages that contain interfaces to mock.
+# all: true auto-discovers every interface — no need to list them individually.
+packages:
+  github.com/houssemlou/fizz/internal/domain/fizzbuzz:
+    config:
+      all: true
+  github.com/houssemlou/fizz/internal/handler:
+    config:
+      all: true
+  github.com/houssemlou/fizz/internal/kafka:
+    config:
+      all: true

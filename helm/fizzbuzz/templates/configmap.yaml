@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fizzbuzz.name" . }}
+  labels:
+    {{- include "fizzbuzz.labels" . | nindent 4 }}
+data:
+  ENV:          {{ .Values.config.env | quote }}
+  GIN_MODE:     {{ .Values.config.ginMode | quote }}
+  LOG_LEVEL:    {{ .Values.config.logLevel | quote }}
+  LOG_FORMAT:   {{ .Values.config.logFormat | quote }}
+  METRICS_ADDR: {{ .Values.config.metricsAddr | quote }}

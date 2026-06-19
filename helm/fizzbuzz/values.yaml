@@ -1,0 +1,56 @@
+image:
+  registry: ghcr.io
+  repository: houssemlou/fizz
+  tag: main
+  pullPolicy: IfNotPresent
+
+# -- API server
+api:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  hpa:
+    minReplicas: 2
+    maxReplicas: 20
+    cpuUtilization: 70
+    memoryUtilization: 80
+
+# -- Stats worker
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  keda:
+    minReplicas: 1
+    maxReplicas: 10
+    kafka:
+      topic: fizzbuzz-requests
+      consumerGroup: fizzbuzz-stats
+      lagThreshold: "50"
+    prometheus:
+      address: http://prometheus:9090
+      requestRateThreshold: "100"
+
+# -- Shared config (non-sensitive)
+config:
+  env: prod
+  ginMode: release
+  logLevel: info
+  logFormat: json
+  metricsAddr: ":9091"
+
+# -- Sensitive values — override via --set or a separate secrets manager
+secrets:
+  apiKey: ""
+  databaseURL: ""
+  kafkaBroker: ""

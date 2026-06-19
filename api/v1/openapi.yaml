@@ -1,0 +1,142 @@
+openapi: "3.0.3"
+
+info:
+  title: FizzBuzz API
+  version: "1.0.0"
+  description: >
+    A production-ready FizzBuzz REST API.
+    The /fizzbuzz endpoint generates a sequence and records each unique
+    parameter combination. The /stats endpoint returns the most-requested one.
+
+paths:
+  /v1/fizzbuzz:
+    get:
+      operationId: getFizzBuzz
+      summary: Generate a fizzbuzz sequence
+      parameters:
+        - name: int1
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: int2
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: str1
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: str2
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Fizzbuzz sequence generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FizzBuzzResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /v1/stats:
+    get:
+      operationId: getStats
+      summary: Get the most-requested fizzbuzz combination
+      responses:
+        "200":
+          description: Stats result (may be empty if no requests recorded yet)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /v1/health:
+    get:
+      operationId: getHealth
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  schemas:
+    FizzBuzzParams:
+      type: object
+      required: [int1, int2, limit, str1, str2]
+      properties:
+        int1:
+          type: integer
+        int2:
+          type: integer
+        limit:
+          type: integer
+        str1:
+          type: string
+        str2:
+          type: string
+
+    FizzBuzzResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          type: array
+          items:
+            type: string
+
+    StatsResponse:
+      type: object
+      properties:
+        request:
+          $ref: "#/components/schemas/FizzBuzzParams"
+        hits:
+          type: integer
+        message:
+          type: string
+
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Missing, malformed, or invalid query parameter
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

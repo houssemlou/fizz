@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fizzbuzz.name" . }}-worker
+  labels:
+    {{- include "fizzbuzz.labels" . | nindent 4 }}
+    {{- include "fizzbuzz.workerSelectorLabels" . | nindent 4 }}
+spec:
+  # replicas is managed by KEDA — this is only the initial count
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "fizzbuzz.workerSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fizzbuzz.workerSelectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: worker
+          image: "{{ include "fizzbuzz.workerImage" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "fizzbuzz.name" . }}
+            - secretRef:
+                name: {{ include "fizzbuzz.name" . }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+---
+# KEDA scales the worker on two signals:
+#   1. Kafka consumer lag   — reactive: scales up when messages pile up
+#   2. HTTP request rate    — proactive: scales up before lag even builds
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "fizzbuzz.name" . }}-worker
+  labels:
+    {{- include "fizzbuzz.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    name: {{ include "fizzbuzz.name" . }}-worker
+  minReplicaCount: {{ .Values.worker.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.worker.keda.maxReplicas }}
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: {{ .Values.secrets.kafkaBroker | quote }}
+        consumerGroup: {{ .Values.worker.keda.kafka.consumerGroup | quote }}
+        topic: {{ .Values.worker.keda.kafka.topic | quote }}
+        lagThreshold: {{ .Values.worker.keda.kafka.lagThreshold | quote }}
+        offsetResetPolicy: earliest
+
+    - type: prometheus
+      metadata:
+        serverAddress: {{ .Values.worker.keda.prometheus.address | quote }}
+        metricName: fizzbuzz_http_requests_total
+        query: sum(rate(fizzbuzz_http_requests_total[1m]))
+        threshold: {{ .Values.worker.keda.prometheus.requestRateThreshold | quote }}

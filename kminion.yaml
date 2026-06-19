@@ -1,0 +1,8 @@
+kafka:
+  brokers:
+    - "kafka:9092"
+
+minion:
+  consumerGroups:
+    enabled: true
+    granularity: partition
